@@ -1,3 +1,9 @@
+libnss-tacplus (1.0.3-3) unstable; urgency=low
+  * Add IPv6 address parsing support for tacacs server
+  * Fix debian/rules with --dpkg-shlibdeps-params=--ignore-missing-info
+
+ -- Alexander Petrovskiy <alexpe@mellanox.com>  Thu, 16 May 2019 00:13:41 +0300 
+
 libnss-tacplus (1.0.3-2) unstable; urgency=low
   * Fixed package remove to clean up plugin entries in nsswitch.conf
   * New Disabled: added user_homedir config variable to allow per-user
