@@ -240,7 +240,7 @@ static int nss_tacplus_config(int *errnop, const char *cfile, int top)
             if(tac_srv_no < TAC_PLUS_MAXSERVERS) {
                 struct addrinfo hints, *servers, *server;
                 int rv;
-                char *port, server_buf[sizeof lbuf];
+                char *close_bracket, *server_name, *port, server_buf[sizeof lbuf];
 
                 memset(&hints, 0, sizeof hints);
                 hints.ai_family = AF_UNSPEC;  /* use IPv4 or IPv6, whichever */
@@ -248,12 +248,22 @@ static int nss_tacplus_config(int *errnop, const char *cfile, int top)
 
                 strcpy(server_buf, lbuf + 7);
 
-                port = strchr(server_buf, ':');
-                if(port != NULL) {
-                    *port = '\0';
-					port++;
+                if (*server_buf == '[' &&
+                    (close_bracket = strchr(server_buf, ']')) != NULL) {
+                    /* Check for URI syntax */
+                    server_name = server_buf + 1;
+                    port = strchr(close_bracket, ':');
+                    *close_bracket = '\0';
+                } else { /* Fall back to traditional syntax */
+                    server_name = server_buf;
+                    port = strchr(server_buf, ':');
                 }
-                if((rv = getaddrinfo(server_buf, (port == NULL) ?
+                if (port != NULL) {
+                    *port = '\0';
+                    port++;
+                }
+
+                if((rv = getaddrinfo(server_name, (port == NULL) ?
                             "49" : port, &hints, &servers)) == 0) {
                     for(server = servers; server != NULL &&
                         tac_srv_no < TAC_PLUS_MAXSERVERS;
@@ -269,7 +279,7 @@ static int nss_tacplus_config(int *errnop, const char *cfile, int top)
                 else {
                     syslog(LOG_ERR,
                         "%s: skip invalid server: %s (getaddrinfo: %s)",
-                        nssname, server_buf, gai_strerror(rv));
+                        nssname, server_name, gai_strerror(rv));
                 }
             }
             else {
